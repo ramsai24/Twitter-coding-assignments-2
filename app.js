@@ -289,9 +289,11 @@ app.get(
     const sqlQuery = `
   SELECT user.username 
   FROM user INNER JOIN like ON user.user_id = like.user_id 
-  INNER JOIN follower ON follower.following_user_id= like.user_id
+  INNER JOIN follower ON follower.following_user_id= tweet.user_id
+  INNER JOIN tweet ON tweet.tweet_id= like.tweet_id
 
-  WHERE like.tweet_id = ${tweetId} AND follower.follower_user_id = ${dbUser.user_id};`;
+  WHERE like.tweet_id = ${tweetId} AND follower.follower_user_id = ${dbUser.user_id}
+   ORDER BY tweet.tweet_id;`;
 
     const likesList = await db.all(sqlQuery);
     console.log(likesList);
@@ -304,7 +306,7 @@ app.get(
 
     console.log(listOfNames);
 
-    //COUNT(like.like_id) AS likes, COUNT(reply.reply_id) AS replies  like.like_id, reply.reply_id
+    //AND follower.follower_user_id = ${dbUser.user_id}    COUNT(like.like_id) AS likes, COUNT(reply.reply_id) AS replies  like.like_id, reply.reply_id
 
     if (listOfNames.length !== 0) {
       response.send({ likes: listOfNames });
