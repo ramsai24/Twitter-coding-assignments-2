@@ -316,3 +316,100 @@ app.get(
     }
   }
 );
+
+//API 8
+
+app.get(
+  "/tweets/:tweetId/replies/",
+  authenticateToken,
+  async (request, response) => {
+    console.log("ready for Handler function");
+
+    console.log(request.username);
+
+    const username = request.username;
+
+    const dbUserQuery = `
+  SELECT user_id FROM user WHERE username = '${username}';`;
+
+    const dbUser = await db.get(dbUserQuery);
+
+    console.log(dbUser);
+
+    const { tweetId } = request.params;
+
+    const sqlQuery = `
+  SELECT user.username AS name, reply 
+  FROM reply INNER JOIN tweet ON tweet.tweet_id = reply.tweet_id 
+  INNER JOIN user ON tweet.user_id = user.user_id 
+  INNER JOIN follower ON follower.following_user_id= tweet.user_id
+
+  WHERE tweet.tweet_id = ${tweetId} AND follower.follower_user_id = ${dbUser.user_id};`;
+
+    const tweetsList = await db.all(sqlQuery);
+
+    //COUNT(like.like_id) AS likes, COUNT(reply.reply_id) AS replies  like.like_id, reply.reply_id
+
+    if (tweetsList.length !== 0) {
+      response.send(tweetsList);
+    } else {
+      response.status(401);
+      response.send("Invalid Request");
+    }
+  }
+);
+
+//API 9
+
+app.get("/user/tweets/", authenticateToken, async (request, response) => {
+  console.log("ready for Handler function");
+
+  console.log(request.username);
+
+  const username = request.username;
+
+  const dbUserQuery = `
+  SELECT user_id FROM user WHERE username = '${username}';`;
+
+  const dbUser = await db.get(dbUserQuery);
+
+  console.log(dbUser);
+
+  const { tweetId } = request.params;
+
+  const sqlQuery = `
+  SELECT DISTINCT(tweet) ,COUNT(like_id) AS likes, COUNT(reply_id) AS replies, tweet.date_time AS dateTime
+  FROM  tweet LEFT JOIN  reply  ON tweet.tweet_id = reply.tweet_id
+  LEFT JOIN like ON like.tweet_id = tweet.tweet_id 
+  
+
+  WHERE tweet.user_id = ${dbUser.user_id}
+  GROUP BY tweet.tweet_id, tweet.tweet;`;
+
+  const tweetsList = await db.all(sqlQuery);
+  response.send(tweetsList);
+
+  //, COUNT(like_id) AS likes, COUNT(reply_id) AS replies, tweet.date_time AS dateTime
+});
+
+//API10
+app.post("/user/tweets/", authenticateToken, async (request, response) => {
+  const { tweet } = request.body;
+  console.log(tweet);
+
+  const username = request.username;
+
+  const dbUserQuery = `
+  SELECT user_id FROM user WHERE username = '${username}';`;
+
+  const dbUser = await db.get(dbUserQuery);
+
+  console.log(dbUser);
+
+  const postQuery = `
+        INSERT INTO tweet (tweet,user_id)
+        VALUES ('${tweet}' , ${dbUser.user_id} );`;
+
+  await db.run(postQuery);
+  response.send("Created a Tweet");
+});
