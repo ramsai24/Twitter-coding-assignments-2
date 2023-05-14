@@ -351,7 +351,7 @@ app.get(
     //COUNT(like.like_id) AS likes, COUNT(reply.reply_id) AS replies  like.like_id, reply.reply_id
 
     if (tweetsList.length !== 0) {
-      response.send(tweetsList);
+      response.send({ replies: tweetsList });
     } else {
       response.status(401);
       response.send("Invalid Request");
