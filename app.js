@@ -413,3 +413,57 @@ app.post("/user/tweets/", authenticateToken, async (request, response) => {
   await db.run(postQuery);
   response.send("Created a Tweet");
 });
+
+//API 11
+
+app.delete(
+  "/tweets/:tweetId/",
+  authenticateToken,
+  async (request, response) => {
+    console.log("ready for Handler function");
+
+    console.log(request.username);
+
+    const username = request.username;
+
+    const dbUserQuery = `
+  SELECT user_id FROM user WHERE username = '${username}';`;
+
+    const dbUser = await db.get(dbUserQuery);
+
+    console.log(dbUser);
+
+    const { tweetId } = request.params;
+
+    console.log(tweetId);
+
+    const tweetIdsQuery = `SELECT tweet_id FROM tweet
+                            WHERE user_id = ${dbUser.user_id} ;`;
+
+    const tweetsIDs = await db.all(tweetIdsQuery);
+
+    const tweetsIDsList = [];
+
+    tweetsIDs.map((each) => tweetsIDsList.push(each.tweet_id.toString()));
+
+    console.log(tweetsIDsList);
+
+    console.log(tweetsIDsList.includes(tweetId));
+
+    //COUNT(like.like_id) AS likes, COUNT(reply.reply_id) AS replies  like.like_id, reply.reply_id
+
+    if (tweetsIDsList.includes(tweetId)) {
+      const deleteQuery = `
+        DELETE FROM tweet 
+        WHERE tweet_id = ${tweetId};`;
+
+      await db.run(deleteQuery);
+      response.send("Tweet Removed");
+    } else {
+      response.status(401);
+      response.send("Invalid Request");
+    }
+  }
+);
+
+module.exports = app;
