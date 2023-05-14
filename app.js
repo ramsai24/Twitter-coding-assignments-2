@@ -113,41 +113,70 @@ app.post("/login/", async (request, response) => {
   }
 });
 
-//token Authentication
+//Authentication tokens
 
 const authenticateToken = async (request, response, next) => {
-  const { username } = request.body;
   let jwtToken;
-  const authToken = request.headers;
 
-  if (authToken === undefined) {
-    response.status(401);
-    response.send("Invalid JWT Token headers");
-  } else {
-    jwtToken = authToken["authorization"].split(" ")[1];
+  const authenticate = request.headers["authorization"];
+
+  if (authenticate !== undefined) {
+    jwtToken = authenticate.split(" ")[1];
     console.log(jwtToken);
   }
-  // console.log(jwtToken);
-
   if (jwtToken !== undefined) {
-    const tokenVerify = await jwt.verify(
-      jwtToken,
-      "ram",
-      async (error, payload) => {
-        if (error) {
-          response.status(401);
-          response.send("Invalid JWT Token");
-        } else {
-          request.username = payload.username;
-          next();
-        }
+    const tokenVerify = await jwt.verify(jwtToken, "ram", (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        request.username = payload.username;
+        next();
+
+        //response.send(payload);
       }
-    );
+    });
   } else {
     response.status(401);
-    response.send("Invalid No JWT Token");
+    response.send("Invalid JWT Token");
   }
 };
+
+// //token Authentication
+
+// const authenticateToken = async (request, response, next) => {
+//   const { username } = request.body;
+//   let jwtToken;
+//   const authToken = request.headers;
+
+//   if (authToken === undefined) {
+//     response.status(401);
+//     response.send("Invalid JWT Token headers");
+//   } else {
+//     jwtToken = authToken["authorization"].split(" ")[1];
+//     console.log(jwtToken);
+//   }
+//   // console.log(jwtToken);
+
+//   if (jwtToken !== undefined) {
+//     const tokenVerify = await jwt.verify(
+//       jwtToken,
+//       "ram",
+//       async (error, payload) => {
+//         if (error) {
+//           response.status(401);
+//           response.send("Invalid JWT Token");
+//         } else {
+//           request.username = payload.username;
+//           next();
+//         }
+//       }
+//     );
+//   } else {
+//     response.status(401);
+//     response.send("Invalid No JWT Token");
+//   }
+// };
 
 //API 3
 
@@ -165,10 +194,11 @@ app.get("/user/tweets/feed/", authenticateToken, async (request, response) => {
 
   const sqlQuery = `
   SELECT DISTINCT(user.username) AS name, tweet.tweet, tweet.date_time AS dateTime 
-  FROM follower INNER JOIN tweet ON follower.following_user_id = tweet.user_id
-  INNER JOIN user  ON user.user_id = tweet.user_id
+  FROM user  INNER JOIN follower  ON user.user_id = follower.following_user_id
+  INNER JOIN tweet  ON  follower.following_user_id  = tweet.user_id
   WHERE follower.follower_user_id = ${dbUser.user_id}
-  ORDER BY follower.following_user_id; `;
+  ORDER BY tweet.date_time DESC
+  LIMIT 4; `;
 
   const tweetsList = await db.all(sqlQuery);
 
