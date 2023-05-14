@@ -95,7 +95,7 @@ app.post("/login/", async (request, response) => {
 
   if (dbUser === undefined) {
     response.status(400);
-    response.send("Invalid User");
+    response.send("Invalid user");
   } else {
     const verifyPass = await bcrypt.compare(password, dbUser.password);
 
@@ -108,7 +108,7 @@ app.post("/login/", async (request, response) => {
     // scenario 2
     else {
       response.status(400);
-      response.send("Invalid Password");
+      response.send("Invalid password");
     }
   }
 });
@@ -190,7 +190,7 @@ app.get("/user/following/", authenticateToken, async (request, response) => {
   console.log(dbUser);
 
   const sqlQuery = `
-  SELECT DISTINCT(user.username) AS name,*
+  SELECT DISTINCT(user.username) AS name
   FROM follower INNER JOIN tweet ON follower.following_user_id = tweet.user_id
   INNER JOIN user  ON user.user_id = tweet.user_id
   WHERE follower.follower_user_id = ${dbUser.user_id}
