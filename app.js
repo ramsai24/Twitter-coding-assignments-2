@@ -199,8 +199,7 @@ app.get("/user/tweets/feed/", authenticateToken, async (request, response) => {
   WHERE follower.follower_user_id = ${dbUser.user_id}
   ORDER BY tweet.date_time DESC
   
-  LIMIT 4
-  OFFSET 0; `;
+  LIMIT 4; `;
 
   const tweetsList = await db.all(sqlQuery);
 
@@ -222,9 +221,9 @@ app.get("/user/following/", authenticateToken, async (request, response) => {
   console.log(dbUser);
 
   const sqlQuery = `
-  SELECT DISTINCT(user.username) AS name
-  FROM follower INNER JOIN tweet ON follower.following_user_id = tweet.user_id
-  INNER JOIN user  ON user.user_id = tweet.user_id
+  SELECT (user.name) AS name
+  FROM user INNER JOIN follower ON follower.following_user_id = user.user_id
+  
   WHERE follower.follower_user_id = ${dbUser.user_id}
   ORDER BY follower.following_user_id; `;
 
@@ -248,9 +247,9 @@ app.get("/user/followers/", authenticateToken, async (request, response) => {
   console.log(dbUser);
 
   const sqlQuery = `
-  SELECT DISTINCT(user.username) AS name
-  FROM follower INNER JOIN tweet ON follower.follower_user_id = tweet.user_id
-  INNER JOIN user  ON user.user_id = tweet.user_id
+  SELECT DISTINCT(user.name) AS name
+  FROM user INNER JOIN follower ON follower.follower_user_id = user.user_id
+  
   WHERE follower.following_user_id = ${dbUser.user_id}; `;
 
   const tweetsList = await db.all(sqlQuery);
