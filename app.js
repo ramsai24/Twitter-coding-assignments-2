@@ -193,12 +193,14 @@ app.get("/user/tweets/feed/", authenticateToken, async (request, response) => {
   console.log(dbUser);
 
   const sqlQuery = `
-  SELECT DISTINCT(user.username) AS name, tweet.tweet, tweet.date_time AS dateTime 
+  SELECT DISTINCT(user.username) AS username, tweet.tweet, tweet.date_time AS dateTime 
   FROM user  INNER JOIN follower  ON user.user_id = follower.following_user_id
   INNER JOIN tweet  ON  follower.following_user_id  = tweet.user_id
   WHERE follower.follower_user_id = ${dbUser.user_id}
   ORDER BY tweet.date_time DESC
-  LIMIT 4; `;
+  
+  LIMIT 4
+  OFFSET 0; `;
 
   const tweetsList = await db.all(sqlQuery);
 
